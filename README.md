@@ -10,6 +10,7 @@ A Python-based tool to fetch and analyze GitHub user activity statistics, includ
 - 🤖 GitHub Actions workflow for automation
 - 📝 Detailed activity reports
 - 💾 Export results as artifacts
+- 📄 Automatic GitHub Actions step summary integration
 
 ## Prerequisites
 
@@ -99,13 +100,18 @@ The workflow:
 1. Displays statistics in the GitHub Actions logs
 2. Generates a detailed report file
 3. Uploads the report as an artifact (retained for 30 days)
+4. Writes statistics to the GitHub Actions step summary (visible in the workflow run summary page)
+
+### GitHub Actions Step Summary
+
+When running in GitHub Actions, the script automatically detects the `GITHUB_STEP_SUMMARY` environment variable and writes the statistics to both the console logs and the step summary. This provides an easy-to-read summary directly on the workflow run page without needing to download artifacts.
 
 ### Download Artifacts
 
 After a workflow run completes:
 1. Go to the workflow run summary page
-2. Scroll to the "Artifacts" section
-3. Download `user-statistics-report` to view the detailed results
+2. View the statistics in the step summary section at the bottom of the page
+3. Or scroll to the "Artifacts" section and download `user-statistics-report` for offline viewing
 
 ## Example Output
 

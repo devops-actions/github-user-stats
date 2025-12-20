@@ -32,6 +32,23 @@ class GitHubUserStats:
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json"
         }
+        self.step_summary_file = os.getenv("GITHUB_STEP_SUMMARY")
+    
+    def _print_and_log(self, message: str = "") -> None:
+        """
+        Print to stdout and optionally write to GitHub step summary.
+        
+        Args:
+            message: Message to print and log
+        """
+        print(message)
+        if self.step_summary_file:
+            try:
+                with open(self.step_summary_file, 'a', encoding='utf-8') as f:
+                    f.write(message + "\n")
+            except (IOError, OSError) as e:
+                # Fail silently if we can't write to the step summary file
+                pass
     
     def fetch_user_activity(self, days: int) -> Dict[str, Any]:
         """
@@ -195,46 +212,46 @@ class GitHubUserStats:
         Args:
             stats: Statistics dictionary
         """
-        print("\n" + "=" * 80)
-        print(f"GitHub User Statistics for @{stats['username']}")
+        self._print_and_log("\n" + "=" * 80)
+        self._print_and_log(f"GitHub User Statistics for @{stats['username']}")
         if stats['name'] != "N/A":
-            print(f"Name: {stats['name']}")
-        print(f"Period: Last {stats['period_days']} days (since {stats['since_date'][:10]})")
-        print("=" * 80)
+            self._print_and_log(f"Name: {stats['name']}")
+        self._print_and_log(f"Period: Last {stats['period_days']} days (since {stats['since_date'][:10]})")
+        self._print_and_log("=" * 80)
         
         # Pull Requests
-        print(f"\n📋 Pull Requests: {stats['pull_requests']['count']}")
+        self._print_and_log(f"\n📋 Pull Requests: {stats['pull_requests']['count']}")
         if stats['pull_requests']['items']:
-            print("\nRecent Pull Requests:")
+            self._print_and_log("\nRecent Pull Requests:")
             for pr in stats['pull_requests']['items'][:10]:  # Show top 10
                 state_emoji = "✅" if pr['state'] == "MERGED" else "🟢" if pr['state'] == "OPEN" else "❌"
-                print(f"  {state_emoji} {pr['repository']['nameWithOwner']}")
-                print(f"     {pr['title']}")
-                print(f"     {pr['url']} ({pr['createdAt'][:10]})")
+                self._print_and_log(f"  {state_emoji} {pr['repository']['nameWithOwner']}")
+                self._print_and_log(f"     {pr['title']}")
+                self._print_and_log(f"     {pr['url']} ({pr['createdAt'][:10]})")
         
         # Issues
-        print(f"\n🐛 Issues: {stats['issues']['count']}")
+        self._print_and_log(f"\n🐛 Issues: {stats['issues']['count']}")
         if stats['issues']['items']:
-            print("\nRecent Issues:")
+            self._print_and_log("\nRecent Issues:")
             for issue in stats['issues']['items'][:10]:  # Show top 10
                 state_emoji = "🟢" if issue['state'] == "OPEN" else "✅"
-                print(f"  {state_emoji} {issue['repository']['nameWithOwner']}")
-                print(f"     {issue['title']}")
-                print(f"     {issue['url']} ({issue['createdAt'][:10]})")
+                self._print_and_log(f"  {state_emoji} {issue['repository']['nameWithOwner']}")
+                self._print_and_log(f"     {issue['title']}")
+                self._print_and_log(f"     {issue['url']} ({issue['createdAt'][:10]})")
         
         # Discussions
-        print(f"\n💬 Discussions: {stats['discussions']['count']}")
+        self._print_and_log(f"\n💬 Discussions: {stats['discussions']['count']}")
         if stats['discussions']['items']:
-            print("\nRecent Discussions:")
+            self._print_and_log("\nRecent Discussions:")
             for disc in stats['discussions']['items'][:10]:  # Show top 10
-                print(f"  💬 {disc['title']}")
-                print(f"     {disc['url']} ({disc['createdAt'][:10]})")
+                self._print_and_log(f"  💬 {disc['title']}")
+                self._print_and_log(f"     {disc['url']} ({disc['createdAt'][:10]})")
         
         # Summary
-        print("\n" + "=" * 80)
-        print("Summary:")
-        print(f"  Total Activity Items: {stats['pull_requests']['count'] + stats['issues']['count'] + stats['discussions']['count']}")
-        print("=" * 80 + "\n")
+        self._print_and_log("\n" + "=" * 80)
+        self._print_and_log("Summary:")
+        self._print_and_log(f"  Total Activity Items: {stats['pull_requests']['count'] + stats['issues']['count'] + stats['discussions']['count']}")
+        self._print_and_log("=" * 80 + "\n")
 
 
 def main():
