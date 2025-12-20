@@ -116,16 +116,26 @@ class GitHubUserStats:
     
     def _parse_github_datetime(self, date_string: str) -> datetime:
         """
-        Parse GitHub's ISO 8601 datetime format.
+        Parse GitHub's ISO 8601 datetime format or standard ISO format.
         
         Args:
-            date_string: ISO format datetime string from GitHub API
+            date_string: ISO format datetime string (with or without 'Z' suffix)
             
         Returns:
             datetime object
         """
-        # GitHub returns ISO 8601 format with 'Z' suffix for UTC
-        return datetime.fromisoformat(date_string.replace('Z', '+00:00'))
+        # Handle both GitHub's 'Z' suffix format and standard ISO format
+        if date_string.endswith('Z'):
+            date_string = date_string.replace('Z', '+00:00')
+        # Handle timezone-naive strings (assume UTC)
+        elif '+' not in date_string and date_string.count(':') == 2:
+            date_string += '+00:00'
+        
+        try:
+            return datetime.fromisoformat(date_string)
+        except ValueError as e:
+            # Fallback to manual parsing if fromisoformat fails
+            raise ValueError(f"Unable to parse datetime: {date_string}") from e
     
     def _process_data(self, user_data: Dict, since_date: str, days: int) -> Dict[str, Any]:
         """
