@@ -37,6 +37,10 @@ class GitHubUserStats:
         """
         Fetch user activity for the specified number of days.
         
+        Note: This fetches the most recent 100 items of each type. For very active users,
+        some older items within the time period may not be included. Client-side filtering
+        is used to match the specified time range.
+        
         Args:
             days: Number of days to look back
             
@@ -45,8 +49,11 @@ class GitHubUserStats:
         """
         since_date = (datetime.now() - timedelta(days=days)).isoformat()
         
+        # Note: GitHub's GraphQL API doesn't support filtering by date directly in the query
+        # for user's pullRequests, issues, and discussions. We fetch recent items and filter
+        # client-side. The limit of 100 per type should cover most use cases.
         query = """
-        query($username: String!, $since: DateTime!) {
+        query($username: String!) {
           user(login: $username) {
             login
             name
@@ -87,8 +94,7 @@ class GitHubUserStats:
         """
         
         variables = {
-            "username": self.username,
-            "since": since_date
+            "username": self.username
         }
         
         response = requests.post(
@@ -228,6 +234,10 @@ def main():
         "--token",
         help="GitHub personal access token (or use GITHUB_TOKEN environment variable)"
     )
+    parser.add_argument(
+        "--output-file",
+        help="Optional: write the output to a file instead of stdout"
+    )
     
     args = parser.parse_args()
     
@@ -243,10 +253,19 @@ def main():
         print(f"Fetching statistics for @{args.username} over the last {args.days} days...")
         stats = fetcher.fetch_user_activity(args.days)
         
-        # Print results
-        fetcher.print_statistics(stats)
-        
-        print("✅ Statistics fetched successfully!")
+        # Redirect output if file is specified
+        if args.output_file:
+            with open(args.output_file, 'w', encoding='utf-8') as f:
+                # Temporarily redirect stdout
+                original_stdout = sys.stdout
+                sys.stdout = f
+                fetcher.print_statistics(stats)
+                sys.stdout = original_stdout
+            print(f"✅ Statistics saved to {args.output_file}")
+        else:
+            # Print results to stdout
+            fetcher.print_statistics(stats)
+            print("✅ Statistics fetched successfully!")
         
     except Exception as e:
         print(f"❌ Error: {str(e)}", file=sys.stderr)

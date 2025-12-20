@@ -62,6 +62,16 @@ python fetch_user_stats.py --username rajbos --days 7 --token your_token_here
 - `--username`: GitHub username to fetch statistics for (default: `rajbos`)
 - `--days`: Number of days to look back (default: `30`)
 - `--token`: GitHub personal access token (alternatively, use `GITHUB_TOKEN` environment variable)
+- `--output-file`: Optional path to write the output to a file instead of stdout
+
+### Save Output to File
+
+Save the statistics report to a file:
+
+```bash
+python fetch_user_stats.py --username rajbos --days 30 --output-file report.txt
+```
+
 
 ## GitHub Actions Workflow
 
@@ -198,6 +208,14 @@ If no activity is found:
 - Verify the username is correct
 - Check if there's activity in the specified time period
 - Ensure the token has access to view the user's activity
+
+### Data Limitations
+
+The script fetches the most recent 100 items of each type (pull requests, issues, discussions):
+- For very active users, some older items within the time period may not be included
+- This is a limitation of the GitHub GraphQL API query structure
+- The 100-item limit per type typically covers most use cases
+- If you need complete historical data, consider reducing the lookback period
 
 ## Contributing
 

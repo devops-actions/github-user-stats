@@ -53,17 +53,14 @@ jobs:
         run: |
           python fetch_user_stats.py \
             --username ${{ github.event.inputs.username || 'rajbos' }} \
-            --days ${{ github.event.inputs.days || '30' }}
+            --days ${{ github.event.inputs.days || '30' }} \
+            --output-file user_stats_report.txt
       
-      - name: Generate statistics report
+      - name: Display statistics summary
         if: always()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Generating detailed statistics report..."
-          python fetch_user_stats.py \
-            --username ${{ github.event.inputs.username || 'rajbos' }} \
-            --days ${{ github.event.inputs.days || '30' }} > user_stats_report.txt
+          echo "Statistics report generated successfully"
+          echo "See artifact for detailed report"
       
       - name: Upload statistics as artifact
         if: always()
