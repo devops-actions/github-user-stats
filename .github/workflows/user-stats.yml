@@ -1,0 +1,74 @@
+name: GitHub User Statistics
+
+on:
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      username:
+        description: 'GitHub username to analyze'
+        required: false
+        default: 'rajbos'
+      days:
+        description: 'Number of days to look back'
+        required: false
+        default: '30'
+  
+  # Run on a schedule (weekly on Monday at 9 AM UTC)
+  schedule:
+    - cron: '0 9 * * 1'
+  
+  # Run on push to main branch (for testing)
+  push:
+    branches:
+      - main
+    paths:
+      - 'fetch_user_stats.py'
+      - '.github/workflows/user-stats.yml'
+
+jobs:
+  fetch-statistics:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Fetch user statistics
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python fetch_user_stats.py \
+            --username ${{ github.event.inputs.username || 'rajbos' }} \
+            --days ${{ github.event.inputs.days || '30' }}
+      
+      - name: Generate statistics report
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Generating detailed statistics report..."
+          python fetch_user_stats.py \
+            --username ${{ github.event.inputs.username || 'rajbos' }} \
+            --days ${{ github.event.inputs.days || '30' }} > user_stats_report.txt
+      
+      - name: Upload statistics as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: user-statistics-report
+          path: user_stats_report.txt
+          retention-days: 30
