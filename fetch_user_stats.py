@@ -114,6 +114,19 @@ class GitHubUserStats:
         
         return self._process_data(data["data"]["user"], since_date, days)
     
+    def _parse_github_datetime(self, date_string: str) -> datetime:
+        """
+        Parse GitHub's ISO 8601 datetime format.
+        
+        Args:
+            date_string: ISO format datetime string from GitHub API
+            
+        Returns:
+            datetime object
+        """
+        # GitHub returns ISO 8601 format with 'Z' suffix for UTC
+        return datetime.fromisoformat(date_string.replace('Z', '+00:00'))
+    
     def _process_data(self, user_data: Dict, since_date: str, days: int) -> Dict[str, Any]:
         """
         Process the raw API data and filter by date range.
@@ -126,24 +139,24 @@ class GitHubUserStats:
         Returns:
             Processed statistics dictionary
         """
-        since_dt = datetime.fromisoformat(since_date.replace('Z', '+00:00'))
+        since_dt = self._parse_github_datetime(since_date)
         
         # Filter pull requests by date
         prs = [
             pr for pr in user_data["pullRequests"]["nodes"]
-            if datetime.fromisoformat(pr["createdAt"].replace('Z', '+00:00')) >= since_dt
+            if self._parse_github_datetime(pr["createdAt"]) >= since_dt
         ]
         
         # Filter issues by date
         issues = [
             issue for issue in user_data["issues"]["nodes"]
-            if datetime.fromisoformat(issue["createdAt"].replace('Z', '+00:00')) >= since_dt
+            if self._parse_github_datetime(issue["createdAt"]) >= since_dt
         ]
         
         # Filter discussions by date
         discussions = [
             disc for disc in user_data["repositoryDiscussions"]["nodes"]
-            if datetime.fromisoformat(disc["createdAt"].replace('Z', '+00:00')) >= since_dt
+            if self._parse_github_datetime(disc["createdAt"]) >= since_dt
         ]
         
         return {
@@ -250,7 +263,7 @@ def main():
     try:
         # Initialize and fetch stats
         fetcher = GitHubUserStats(token, args.username)
-        print(f"Fetching statistics for @{args.username} over the last {args.days} days...")
+        print(f"Fetching statistics for @{args.username} over the last {args.days} days...", file=sys.stderr)
         stats = fetcher.fetch_user_activity(args.days)
         
         # Redirect output if file is specified
@@ -261,11 +274,11 @@ def main():
                 sys.stdout = f
                 fetcher.print_statistics(stats)
                 sys.stdout = original_stdout
-            print(f"✅ Statistics saved to {args.output_file}")
+            print(f"✅ Statistics saved to {args.output_file}", file=sys.stderr)
         else:
             # Print results to stdout
             fetcher.print_statistics(stats)
-            print("✅ Statistics fetched successfully!")
+            print("✅ Statistics fetched successfully!", file=sys.stderr)
         
     except Exception as e:
         print(f"❌ Error: {str(e)}", file=sys.stderr)

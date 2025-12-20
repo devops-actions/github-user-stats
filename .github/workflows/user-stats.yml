@@ -57,13 +57,13 @@ jobs:
             --output-file user_stats_report.txt
       
       - name: Display statistics summary
-        if: always()
+        if: success() || failure()
         run: |
           echo "Statistics report generated successfully"
           echo "See artifact for detailed report"
       
       - name: Upload statistics as artifact
-        if: always()
+        if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
           name: user-statistics-report
