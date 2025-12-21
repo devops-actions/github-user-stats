@@ -19,8 +19,6 @@ on:
   
   # Run on push to main branch (for testing)
   push:
-    branches:
-      - main
     paths:
       - 'fetch_user_stats.py'
       - '.github/workflows/user-stats.yml'
